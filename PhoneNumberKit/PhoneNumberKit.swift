@@ -13,18 +13,20 @@ import CoreTelephony
 
 public typealias MetadataCallback = (() throws -> Data?)
 
-public final class PhoneNumberKit: NSObject {
+public class PhoneNumberKit: NSObject {
+    static var sharedMetadataManager = MetadataManager(metadataCallback: PhoneNumberKit.defaultMetadataCallback)
 
     // Manager objects
     let metadataManager: MetadataManager
     let parseManager: ParseManager
-    let regexManager = RegexManager()
+    let regexManager: RegexManager
 
     // MARK: Lifecycle
     public init(metadataCallback: @escaping MetadataCallback = PhoneNumberKit.defaultMetadataCallback) {
-       self.metadataManager = MetadataManager(metadataCallback: metadataCallback)
-       self.parseManager = ParseManager(metadataManager: metadataManager, regexManager: regexManager)
-   }
+        self.metadataManager = PhoneNumberKit.sharedMetadataManager
+        self.regexManager = RegexManager()
+        self.parseManager = ParseManager(metadataManager: metadataManager, regexManager: regexManager)
+    }
 
     // MARK: Parsing
 
