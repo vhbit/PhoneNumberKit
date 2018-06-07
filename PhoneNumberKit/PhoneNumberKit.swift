@@ -10,22 +10,25 @@ import Foundation
 #if os(iOS)
 import CoreTelephony
 #endif
-    
+
 public final class PhoneNumberKit: NSObject {
-    
+    static var sharedMetadataManager = MetadataManager()
+
     // Manager objects
-    let metadataManager = MetadataManager()
+    let metadataManager: MetadataManager
     let parseManager: ParseManager
-    let regexManager = RegexManager()
-    
+    let regexManager: RegexManager
+
     // MARK: Lifecycle
-    
+
     public override init() {
+        self.metadataManager = PhoneNumberKit.sharedMetadataManager
+        self.regexManager = RegexManager()
         self.parseManager = ParseManager(metadataManager: metadataManager, regexManager: regexManager)
     }
 
     // MARK: Parsing
-    
+
     /// Parses a number string, used to create PhoneNumber objects. Throws.
     ///
     /// - Parameters:
@@ -44,10 +47,10 @@ public final class PhoneNumberKit: NSObject {
                 numberStringWithPlus = "+" + numberStringWithPlus
             }
         }
-        
+
         return try parseManager.parse(numberStringWithPlus, withRegion: region, ignoreType: ignoreType)
     }
-        
+
     /// Parses an array of number strings. Optimised for performance. Invalid numbers are ignored in the resulting array
     ///
     /// - parameter numberStrings:               array of raw number strings.
@@ -58,9 +61,9 @@ public final class PhoneNumberKit: NSObject {
     public func parse(_ numberStrings: [String], withRegion region: String = PhoneNumberKit.defaultRegionCode(), ignoreType: Bool = false, shouldReturnFailedEmptyNumbers: Bool = false) -> [PhoneNumber] {
         return parseManager.parseMultiple(numberStrings, withRegion: region, ignoreType: ignoreType, shouldReturnFailedEmptyNumbers: shouldReturnFailedEmptyNumbers)
     }
-    
+
     // MARK: Formatting
-    
+
     /// Formats a PhoneNumber object for dispaly.
     ///
     /// - parameter phoneNumber: PhoneNumber object.
@@ -86,9 +89,9 @@ public final class PhoneNumberKit: NSObject {
             }
         }
     }
-    
+
     // MARK: Country and region code
-    
+
     /// Get a list of all the countries in the metadata database
     ///
     /// - returns: An array of ISO 639 compliant region codes.
@@ -96,7 +99,7 @@ public final class PhoneNumberKit: NSObject {
         let results = metadataManager.territories.map{$0.codeID}
         return results
     }
-    
+
     /// Get an array of ISO 639 compliant region codes corresponding to a given country code.
     ///
     /// - parameter countryCode: international country code (e.g 44 for the UK).
@@ -106,7 +109,7 @@ public final class PhoneNumberKit: NSObject {
         let results = metadataManager.filterTerritories(byCode: countryCode)?.map{$0.codeID}
         return results
     }
-    
+
     /// Get an main ISO 639 compliant region code for a given country code.
     ///
     /// - parameter countryCode: international country code (e.g 1 for the US).
@@ -126,7 +129,7 @@ public final class PhoneNumberKit: NSObject {
         let results = metadataManager.filterTerritories(byCountry: country)?.countryCode
         return results
     }
-    
+
     /// Get leading digits for an ISO 639 compliant region code.
     ///
     /// - parameter country: ISO 639 compliant region code.
@@ -136,7 +139,7 @@ public final class PhoneNumberKit: NSObject {
         let leadingDigits = metadataManager.filterTerritories(byCountry: country)?.leadingDigits
         return leadingDigits
     }
-    
+
     /// Determine the region code of a given phone number.
     ///
     /// - parameter phoneNumber: PhoneNumber object
@@ -145,9 +148,9 @@ public final class PhoneNumberKit: NSObject {
     public func getRegionCode(of phoneNumber: PhoneNumber) -> String? {
         return parseManager.getRegionCode(of: phoneNumber.nationalNumber, countryCode: phoneNumber.countryCode, leadingZero: phoneNumber.leadingZero)
     }
-    
+
     // MARK: Class functions
-    
+
     /// Get a user's default region code
     ///
     /// - returns: A computed value for the user's current region - based on the iPhone's carrier and if not available, the device region.
